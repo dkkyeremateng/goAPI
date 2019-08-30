@@ -1,4 +1,4 @@
-module todo
+module userAPI
 
 go 1.12
 

@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"todo/models"
+	"userAPI/models"
 
 	"github.com/gin-gonic/gin"
 )
