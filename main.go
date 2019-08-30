@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"log"
-	"net/http"
 	"strconv"
 	"userAPI/models"
 
@@ -27,9 +26,9 @@ func main() {
 	})
 
 	r.GET("/users/:id", func(c *gin.Context) {
-		id, err := strconv.Atoi(c.Param("id"))
+		id, err := checkID(c.Param("id"))
 		if err != nil {
-			c.Status(http.StatusBadRequest)
+			c.Status(400)
 			return
 		}
 
@@ -103,10 +102,10 @@ func main() {
 	}
 }
 
-func checkID(s string) (interface{}, error) {
+func checkID(s string) (int, error) {
 	id, err := strconv.Atoi(s)
 	if err != nil {
-		return nil, errors.New("Unable to convent id to int")
+		return id, errors.New("Unable to convent id to int")
 	}
 	return id, nil
 }
