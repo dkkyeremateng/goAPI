@@ -2,14 +2,15 @@ package models
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/go-bongo/bongo"
 )
 
 // User model
 type User struct {
-	Name   string `json:"name" binding:"required"`
-	Gender string `json:"gender" binding:"required"`
-	Age    int    `json:"age" binding:"required"`
-	ID     int    `json:"-"`
+	bongo.DocumentBase `bson:",inline" json:"_id"`
+	Name               string `json:"name" binding:"required"`
+	Gender             string `json:"gender" binding:"required"`
+	Age                int    `json:"age" binding:"required"`
 }
 
 // Users slice

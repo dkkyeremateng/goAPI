@@ -1,111 +1,33 @@
 package main
 
 import (
-	"errors"
 	"log"
-	"strconv"
-	"userAPI/models"
+	"userAPI/handlers"
+	"userAPI/server"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-bongo/bongo"
 )
 
-func main() {
-	r := gin.Default()
-
-	users := models.Users{
-		{
-			Name:   "Daniel",
-			Gender: "M",
-			Age:    25,
-			ID:     1,
-		},
-	}
-
-	r.GET("/users", func(c *gin.Context) {
-		c.JSON(200, users)
-	})
-
-	r.GET("/users/:id", func(c *gin.Context) {
-		id, err := checkID(c.Param("id"))
-		if err != nil {
-			c.Status(400)
-			return
-		}
-
-		for _, u := range users {
-			if u.ID == id {
-				c.JSON(200, u)
-				return
-			}
-		}
-		c.Status(404)
-	})
-
-	r.POST("/users", func(c *gin.Context) {
-		user := &models.User{}
-
-		if err := user.Validate(c); err != nil {
-			c.JSON(406, gin.H{"error": err.Error()})
-		}
-
-		user.ID = (len(users) + 1)
-
-		users = append(users, *user)
-
-		c.Status(201)
-	})
-
-	r.DELETE("/users/:id", func(c *gin.Context) {
-		id, err := checkID(c.Param("id"))
-		if err != nil {
-			c.Status(400)
-			return
-		}
-
-		for i, u := range users {
-			if u.ID == id {
-				users = append(users[:i], users[1:]...)
-				c.Status(204)
-				return
-			}
-		}
-
-		c.Status(404)
-	})
-
-	r.PUT("/users/:id", func(c *gin.Context) {
-		id, err := checkID(c.Param("id"))
-		if err != nil {
-			c.Status(400)
-			return
-		}
-
-		user := &models.User{}
-
-		if err := user.Validate(c); err != nil {
-			c.JSON(406, gin.H{"error": err.Error()})
-		}
-
-		for i, u := range users {
-			if u.ID == id {
-				users = append(users[:i], users[1:]...)
-				users = append(users, *user)
-				c.JSON(204, user)
-				return
-			}
-		}
-		c.Status(404)
-	})
-
-	if err := r.Run(); err != nil {
-		log.Fatalf("server failed to start: %v", err)
-	}
+var config = &bongo.Config{
+	ConnectionString: "localhost",
+	Database:         "umGoAPI",
 }
 
-func checkID(s string) (int, error) {
-	id, err := strconv.Atoi(s)
+func main() {
+	conn, err := bongo.Connect(config)
 	if err != nil {
-		return id, errors.New("Unable to convent id to int")
+		log.Fatalf("mongodb failed to connet: %v", err)
 	}
-	return id, nil
+
+	r := gin.Default()
+
+	u := handlers.NewHandlers(conn)
+	u.SetupRoutes(r)
+
+	srv := server.New(r, ":8080")
+
+	if err := srv.ListenAndServe(); err != nil {
+		log.Fatalf("server failed to start: %v", err)
+	}
 }
